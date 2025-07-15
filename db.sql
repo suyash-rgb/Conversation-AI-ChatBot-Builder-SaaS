@@ -145,6 +145,51 @@ CREATE TABLE `tickets_data` (
     FOREIGN KEY (`team_id`) REFERENCES `team`(`team_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- New Changes: Introducing Chatbot Instance to uniquely identify a Chatbot
+CREATE TABLE `chatbot_instance` (
+  `instance_id`      INT               NOT NULL AUTO_INCREMENT,
+  `instance_name`    VARCHAR(100)      NOT NULL,
+  `admin_id`         INT               NOT NULL,
+  `created_at`       DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`instance_id`),
+  KEY `idx_instance_admin` (`admin_id`),
+  CONSTRAINT `fk_instance_admin`
+    FOREIGN KEY (`admin_id`)
+    REFERENCES `admin`(`admin_id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `chatbot_data`
+  ADD COLUMN `instance_id` INT NOT NULL AFTER `chatbot_user_id`,
+  ADD KEY `idx_chatbotdata_instance` (`instance_id`),
+  ADD CONSTRAINT `fk_chatbotdata_instance`
+    FOREIGN KEY (`instance_id`) REFERENCES `chatbot_instance`(`instance_id`)
+    ON DELETE CASCADE;
+    
+ALTER TABLE `tickets_data`
+  ADD COLUMN `instance_id` INT NOT NULL AFTER `team_id`,
+  ADD KEY `idx_ticketsdata_instance` (`instance_id`),
+  ADD CONSTRAINT `fk_ticketsdata_instance`
+    FOREIGN KEY (`instance_id`) REFERENCES `chatbot_instance`(`instance_id`)
+    ON DELETE CASCADE;
+
+CREATE TABLE `chatbot_files` (
+  `file_id`       INT            NOT NULL AUTO_INCREMENT,
+  `instance_id`   INT            NOT NULL,
+  `file_url`      VARCHAR(2048)  NOT NULL,
+  `file_type`     ENUM('image','video','pdf') NOT NULL,
+  `uploaded_at`   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`file_id`),
+  KEY `idx_chatbotfiles_instance` (`instance_id`),
+  CONSTRAINT `fk_chatbotfiles_instance`
+    FOREIGN KEY (`instance_id`)
+    REFERENCES `chatbot_instance`(`instance_id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4;
+
+
+
 
 
 

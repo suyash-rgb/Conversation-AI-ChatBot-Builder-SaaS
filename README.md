@@ -2,9 +2,7 @@
 
 Outline structure of the `chatbotbuilder` database, detailing each table, its columns, and how they relate to one another. It’s designed to give you a clear picture of entities, their responsibilities, and interdependencies in simple terms.
 
----
-
-## Tables Overview
+## 📋 Tables Overview
 
 - **admin**  
 - **chatbotbuilder_users**  
@@ -12,139 +10,177 @@ Outline structure of the `chatbotbuilder` database, detailing each table, its co
 - **team**  
 - **agent_team**  
 - **user_conv_journey**  
-- **chatbot_data**  
-- **tickets_data**  
+- **chatbot_instance**   
+- **chatbot_data** 
+- **tickets_data** 
+- **chatbot_files**  
 
 ---
 
-## Table Details
+## 🔍 Table Details
 
-### admin
+### 1. admin  
+Stores business owner records.  
 
-- Columns:  
-  - `admin_id` (PK, auto-increment)  
+- **Primary key:** `admin_id`  
+- **Key fields:**  
   - `owner_name`, `contact_no`, `email`  
   - `website_url`, `company_name`, `sector`  
   - `is_active`, `subscription_active`  
   - `registration_date`, `expiration_date`  
 
-This table holds business owner records. Each owner has contact details, subscription status, and activation flags. Unique constraints on email and website URL ensure no duplicates.
+Unique constraints on `email` and `website_url` prevent duplicates.
 
 ---
 
-### chatbotbuilder_users
+### 2. chatbotbuilder_users  
+Holds login credentials and roles.  
 
-- Columns:  
-  - `user_id` (PK, auto-increment)  
+- **Primary key:** `user_id`  
+- **Key fields:**  
   - `username`, `email`, `password_hash`  
   - `role` (`admin` or `agent`)  
-  - `admin_id` (FK → `admin.admin_id`)  
+  - `admin_id` → `admin(admin_id)` (nullable)  
   - `registration_date`, `is_active`, `refresh_token`  
 
-Users log into the system as either administrators or agents. They link back to an admin record (nullable) and manage authentication via hashed passwords and tokens.
+Links users to their admin account.
 
 ---
 
-### agent
+### 3. agent  
+Represents staff members under an admin.  
 
-- Columns:  
-  - `agent_id` (PK, auto-increment)  
+- **Primary key:** `agent_id`  
+- **Key fields:**  
   - `first_name`, `last_name`  
-  - `admin_id` (FK → `admin.admin_id`)  
-  - `user_id` (FK → `chatbotbuilder_users.user_id`)  
+  - `admin_id` → `admin(admin_id)`  
+  - `user_id` → `chatbotbuilder_users(user_id)`  
 
-Agents represent staff members under an admin. Each agent ties to both an `admin` record (ownership) and a `chatbotbuilder_users` entry (login credentials).
+Each agent has a user login and belongs to one admin.
 
 ---
 
-### team
+### 4. team  
+Defines groups of agents for assignments.  
 
-- Columns:  
-  - `team_id` (PK, auto-increment)  
+- **Primary key:** `team_id`  
+- **Key fields:**  
   - `team_name`  
-  - `admin_id` (FK → `admin.admin_id`)  
-
-Teams are organizational groups created by an admin. They allow clustering of agents for ticket assignments or reporting.
+  - `admin_id` → `admin(admin_id)`  
 
 ---
 
-### agent_team
+### 5. agent_team  
+Join table modeling many-to-many between agents and teams.  
 
-- Columns:  
-  - `agent_id` (PK, FK → `agent.agent_id`)  
-  - `team_id` (PK, FK → `team.team_id`)  
-
-This join table models the many-to-many relationship between agents and teams. An agent can belong to multiple teams, and a team can have multiple agents.
+- **Composite primary key:** (`agent_id`, `team_id`)  
+- **Foreign keys:**  
+  - `agent_id` → `agent(agent_id)`  
+  - `team_id` → `team(team_id)`  
 
 ---
 
-### user_conv_journey
+### 6. user_conv_journey  
+Tracks each user’s chat session.  
 
-- Columns:  
-  - `user_conv_journey_id` (PK, VARCHAR)  
+- **Primary key:** `user_conv_journey_id` (VARCHAR)  
+- **Key fields:**  
   - `user_conversation` (TEXT)  
   - `conv_started`, `conv_ended`  
   - `chatbot_user_id` (nullable)  
 
-Each record captures one user’s chat session, with timestamps and a transcript of the exchange.
+---
+
+### 7. chatbot_instance 
+Identifies individual chatbot deployments per admin.  
+
+- **Primary key:** `instance_id`  
+- **Key fields:**  
+  - `instance_name`  
+  - `admin_id` → `admin(admin_id)`  
+  - `created_at`  
+
+An admin can have multiple chatbot instances.
 
 ---
 
-### chatbot_data
+### 8. chatbot_data 
+Stores per-session metrics and metadata.  
 
-- Columns:  
-  - `chatbot_user_id` (PK, VARCHAR)  
+- **Primary key:** `chatbot_user_id` (VARCHAR)  
+- **Key fields:**  
+  - `instance_id` → `chatbot_instance(instance_id)`  
   - `chatbot_user_name`, `contact`, `email`  
   - `satisfaction_level`, `total_levels`, `session_level`  
   - `is_terminated`, `timestamp`  
   - `userquery`, `callback_requested`  
-  - `user_conv_journey_id` (FK → `user_conv_journey.user_conv_journey_id`)  
-  - `audio_data` (BLOB), `location`, `feedback_details`  
-  - `admin_id` (FK → `admin.admin_id`)  
+  - `user_conv_journey_id` → `user_conv_journey(user_conv_journey_id)`  
+  - `audio_data`, `location`, `feedback_details`  
+  - `admin_id` → `admin(admin_id)`  
   - `chatbot_number`, `filename`  
-
-This table stores per-user session metrics and metadata, linking back to a conversation journey and the admin who owns that data.
 
 ---
 
-### tickets_data
+### 9. tickets_data 
+Captures support tickets raised during chats.  
 
-- Columns:  
-  - `ticket_id` (PK, VARCHAR)  
+- **Primary key:** `ticket_id` (VARCHAR)  
+- **Key fields:**  
   - `ticket_title`, `ticket_created`  
   - `chatbot_user_id`, `chatbot_user_name`, `contact`, `email`  
   - `callback_requested`, `callback_request_resolution_status`  
   - `userquery`, `user_query_resolved`  
-  - `user_conv_journey_id` (FK → `user_conv_journey.user_conv_journey_id`)  
+  - `user_conv_journey_id` → `user_conv_journey(user_conv_journey_id)`  
   - `is_ticket_resolved`, `ticket_resolved`, `ticket_starred`  
   - `location`, `feedback_details`  
-  - `admin_id` (FK → `admin.admin_id`)  
-  - `team_id` (FK → `team.team_id`)  
-
-Support tickets raised by users are recorded here, with status flags, resolution info, and links to the owning admin, team, and conversation journey.
-
----
-
-## Relationships and Dependencies
-
-| Source Table           | Foreign Key              | Target Table         | Cardinality               | On Delete Action |
-|------------------------|--------------------------|----------------------|---------------------------|------------------|
-| chatbotbuilder_users   | `admin_id`               | admin                | Many users → One admin    | SET NULL         |
-| agent                  | `admin_id`               | admin                | Many agents → One admin   | CASCADE          |
-| agent                  | `user_id`                | chatbotbuilder_users | One agent → One user      | CASCADE          |
-| team                   | `admin_id`               | admin                | Many teams → One admin    | CASCADE          |
-| agent_team             | `agent_id`               | agent                | Many-to-many              | CASCADE          |
-| agent_team             | `team_id`                | team                 | Many-to-many              | CASCADE          |
-| chatbot_data           | `user_conv_journey_id`   | user_conv_journey    | Many data rows → One journey | CASCADE       |
-| chatbot_data           | `admin_id`               | admin                | Many data rows → One admin   | CASCADE       |
-| tickets_data           | `admin_id`               | admin                | Many tickets → One admin     | CASCADE       |
-| tickets_data           | `user_conv_journey_id`   | user_conv_journey    | Many tickets → One journey   | CASCADE       |
-| tickets_data           | `team_id`                | team                 | Many tickets → One team      | SET NULL      |
+  - `admin_id` → `admin(admin_id)`  
+  - `team_id` → `team(team_id)`  
+  - `instance_id` → `chatbot_instance(instance_id)`  
 
 ---
 
-## Entity-Relationship Summary
+### 10. chatbot_files 
+Manages files (images, videos, PDFs) uploaded per chatbot instance.  
 
-Admins sit at the top of the hierarchy, owning users, agents, teams, session data, and tickets. Users serve as login accounts and may be linked to an admin. Agents are special users assigned to an admin and may belong to multiple teams. Conversation journeys record each chat session, while `chatbot_data` and `tickets_data` capture session metrics and support tickets linked to those journeys. The many-to-many `agent_team` table allows flexible team assignments, and cascading deletes ensure data integrity as records are removed.
+- **Primary key:** `file_id`  
+- **Key fields:**  
+  - `instance_id` → `chatbot_instance(instance_id)`  
+  - `file_url`, `file_type` (`image`/`video`/`pdf`)  
+  - `uploaded_at`  
 
-This modular design keeps authentication, session tracking, agent management, and ticketing neatly separated yet cohesively linked through clear foreign-key relationships.
+---
+
+## 🔗 Relationships & Dependencies
+
+| Source Table         | FK Column           | Target Table         | Cardinality              | On Delete  |
+|----------------------|---------------------|----------------------|--------------------------|------------|
+| chatbotbuilder_users | admin_id            | admin                | Many → One               | SET NULL   |
+| agent                | admin_id            | admin                | Many → One               | CASCADE    |
+| agent                | user_id             | chatbotbuilder_users | One → One                | CASCADE    |
+| team                 | admin_id            | admin                | Many → One               | CASCADE    |
+| agent_team           | agent_id            | agent                | Many ↔ Many              | CASCADE    |
+| agent_team           | team_id             | team                 | Many ↔ Many              | CASCADE    |
+| user_conv_journey    | —                   | —                    | Independent sessions     | —          |
+| chatbot_instance     | admin_id            | admin                | Many → One               | CASCADE    |
+| chatbot_data         | instance_id         | chatbot_instance     | Many → One               | CASCADE    |
+| chatbot_data         | user_conv_journey_id| user_conv_journey    | Many → One               | CASCADE    |
+| chatbot_data         | admin_id            | admin                | Many → One               | CASCADE    |
+| tickets_data         | instance_id         | chatbot_instance     | Many → One               | CASCADE    |
+| tickets_data         | user_conv_journey_id| user_conv_journey    | Many → One               | CASCADE    |
+| tickets_data         | team_id             | team                 | Many → One               | SET NULL   |
+| tickets_data         | admin_id            | admin                | Many → One               | CASCADE    |
+| chatbot_files        | instance_id         | chatbot_instance     | Many → One               | CASCADE    |
+
+---
+
+## 📖 Entity-Relationship Summary
+
+1. **Admins** own everything: users, agents, teams, chatbot instances, session data, tickets, and files.  
+2. **Users** authenticate and map to an admin; **Agents** extend users with staff details.  
+3. **Teams** group agents; **agent_team** ties them many-to-many.  
+4. **Chatbot Instances** represent distinct bots per admin.  
+5. **Conversations** live in `user_conv_journey`.  
+6. **Session data** (`chatbot_data`) and **tickets** (`tickets_data`) both link to a conversation, instance, and admin.  
+7. **Files** uploaded to a bot are tracked in `chatbot_files`, tied to an instance.  
+
+This updated schema ensures each chatbot deployment is uniquely tracked, while preserving clear ownership, conversation flow, support tickets, and file management.

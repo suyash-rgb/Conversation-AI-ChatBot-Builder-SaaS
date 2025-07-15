@@ -1,0 +1,87 @@
+# ====================
+# 🔹 Python
+# ====================
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.env
+.env.*
+.envrc
+.venv/
+venv/
+env/
+ENV/
+.mypy_cache/
+.dmypy.json
+.pytest_cache/
+.coverage
+.tox/
+.pyre/
+.pytype/
+
+# VSCode Python settings
+.vscode/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Mac & system files
+.DS_Store
+Thumbs.db
+
+# ====================
+# 🔹 React (Vite or CRA)
+# ====================
+node_modules/
+dist/
+build/
+.cache/
+*.log
+*.env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# React build output
+/public/build/
+/public/dist/
+/coverage/
+
+# Vite cache
+.vite/
+
+# Next.js (if used)
+.next/
+out/
+
+# VSCode settings
+.vscode/
+
+# ====================
+# 🔹 Optional IDE-specific
+# ====================
+.idea/
+*.swp
+*.swo
+*.bak
+
+# OS generated
+.DS_Store
+*.tmp
